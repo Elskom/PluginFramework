@@ -50,6 +50,9 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
 		</PackageReference>
+        <PackageReference Include="zlib.managed">
+            <Version>1.1.0</Version>
+        </PackageReference>
 		<Reference Include="System.Windows.Forms" />
 	</ItemGroup>
 
