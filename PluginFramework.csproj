@@ -11,7 +11,7 @@
 		<RepositoryUrl>https://github.com/Elskom/PluginFramework/</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/Elskom/PluginFramework/</PackageProjectUrl>
 		<PackageLicenseUrl>https://github.com/Elskom/PluginFramework/blob/master/LICENSE</PackageLicenseUrl>
-		<Copyright>Copyright (c) 2018</Copyright>
+		<Copyright>Copyright (c) 2018-2019</Copyright>
 		<Description>An Els_kom specific plugin framework.</Description>
 		<PackageReleaseNotes>Added .NET Core 3.0 to target frameworks.</PackageReleaseNotes>
 		<Version>1.0.1</Version>
