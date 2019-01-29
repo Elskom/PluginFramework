@@ -18,6 +18,7 @@ namespace Elskom.Generic.Libs
     {
         private static List<IKomPlugin> komplugins;
         private static List<IEncryptionPlugin> encryptionplugins;
+        private static List<ICallbackPlugin> callbackplugins;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="KOMStream"/> class.
@@ -62,6 +63,25 @@ namespace Elskom.Generic.Libs
                 }
 
                 return encryptionplugins;
+            }
+        }
+
+        /// <summary>
+        /// Gets the list of <see cref="ICallbackPlugin"/> plugins.
+        /// </summary>
+        /// <value>
+        /// The list of <see cref="ICallbackPlugin"/> plugins.
+        /// </value>
+        public static List<ICallbackPlugin> Callbackplugins
+        {
+            get
+            {
+                if (callbackplugins == null)
+                {
+                    callbackplugins = new List<ICallbackPlugin>();
+                }
+
+                return callbackplugins;
             }
         }
 
