@@ -9,7 +9,6 @@ namespace Elskom.Generic.Libs
     using System.Collections.Generic;
     using System.IO;
     using System.Text;
-    using System.Windows.Forms;
     using System.Xml.Linq;
 
     /// <summary>
@@ -103,15 +102,15 @@ namespace Elskom.Generic.Libs
         /// <param name="destFileDir">The target to copy the kom file too.</param>
         public static void CopyKomFiles(string fileName, string origFileDir, string destFileDir)
         {
-            if (File.Exists(origFileDir + fileName))
+            if (File.Exists($"{origFileDir}{fileName}"))
             {
                 if (Directory.Exists(destFileDir))
                 {
                     MoveOriginalKomFiles(fileName, destFileDir, $"{destFileDir}{Path.DirectorySeparatorChar}backup");
-                    if (!destFileDir.EndsWith("\\"))
+                    if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
                     {
                         // we must add this before copying the file to the target location.
-                        destFileDir += "\\";
+                        destFileDir += Path.DirectorySeparatorChar;
                     }
 
                     File.Copy(origFileDir + fileName, destFileDir + fileName);
@@ -127,22 +126,22 @@ namespace Elskom.Generic.Libs
         /// <param name="destFileDir">The target to move the kom file too.</param>
         public static void MoveOriginalKomFilesBack(string fileName, string origFileDir, string destFileDir)
         {
-            if (!origFileDir.EndsWith("\\"))
+            if (!origFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
             {
-                origFileDir += "\\";
+                origFileDir += Path.DirectorySeparatorChar;
             }
 
-            if (!destFileDir.EndsWith("\\"))
+            if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
             {
-                destFileDir += "\\";
+                destFileDir += Path.DirectorySeparatorChar;
             }
 
-            if (File.Exists(origFileDir + fileName))
+            if (File.Exists($"{origFileDir}{fileName}"))
             {
-                if (File.Exists(destFileDir + fileName))
+                if (File.Exists($"{destFileDir}{fileName}"))
                 {
                     File.Copy($"{origFileDir}{fileName}", $"{destFileDir}{fileName}", true);
-                    File.Delete(origFileDir + fileName);
+                    File.Delete($"{origFileDir}{fileName}");
                 }
             }
         }
@@ -153,7 +152,7 @@ namespace Elskom.Generic.Libs
         public static void UnpackKoms()
         {
             UnpackingState = true;
-            var di = new DirectoryInfo($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms");
+            var di = new DirectoryInfo($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms");
             foreach (var fi in di.GetFiles("*.kom"))
             {
                 var kom_file = fi.Name;
@@ -161,14 +160,14 @@ namespace Elskom.Generic.Libs
                 if (kom_ver != 0)
                 {
                     // remove ".kom" on end of string.
-                    var kom_data_folder = Path.GetFileNameWithoutExtension($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}kom_file");
+                    var kom_data_folder = Path.GetFileNameWithoutExtension($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}kom_file");
                     foreach (var komplugin in Komplugins)
                     {
                         try
                         {
                             if (kom_ver == komplugin.SupportedKOMVersion)
                             {
-                                komplugin.Unpack($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_file}", $"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}", kom_file);
+                                komplugin.Unpack($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_file}", $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}", kom_file);
                             }
                             else
                             {
@@ -179,7 +178,7 @@ namespace Elskom.Generic.Libs
                             // make the version dummy file for the packer.
                             try
                             {
-                                using (File.Create($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}{Path.DirectorySeparatorChar}KOMVERSION.{kom_ver}"))
+                                using (File.Create($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}{Path.DirectorySeparatorChar}KOMVERSION.{kom_ver}"))
                                 {
                                 }
                             }
@@ -189,7 +188,7 @@ namespace Elskom.Generic.Libs
                             }
 
                             // delete original kom file.
-                            komplugin.Delete($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_file}", false);
+                            komplugin.Delete($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_file}", false);
                         }
                         catch (NotUnpackableException)
                         {
@@ -217,14 +216,14 @@ namespace Elskom.Generic.Libs
         public static void PackKoms()
         {
             PackingState = true;
-            var di = new DirectoryInfo($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms");
+            var di = new DirectoryInfo($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms");
             foreach (var dri in di.GetDirectories())
             {
                 var kom_data_folder = dri.Name;
-                var kom_ver = CheckFolderVersion($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}");
+                var kom_ver = CheckFolderVersion($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}");
                 if (kom_ver != 0)
                 {
-                    var kom_file = kom_data_folder + ".kom";
+                    var kom_file = "{kom_data_folder}.kom";
 
                     // pack kom based on the version of kom supplied.
                     if (kom_ver != -1)
@@ -235,16 +234,16 @@ namespace Elskom.Generic.Libs
                             {
                                 if (kom_ver == komplugin.SupportedKOMVersion)
                                 {
-                                    komplugin.Pack($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}", $"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_file}", kom_file);
+                                    komplugin.Pack($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}", $"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_file}", kom_file);
 
                                     // delete unpacked kom folder data.
-                                    komplugin.Delete($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}", true);
+                                    komplugin.Delete($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}", true);
                                 }
                             }
                             catch (NotPackableException)
                             {
                                 // do not delete kom data folder.
-                                using (File.Create($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}{Path.DirectorySeparatorChar}\\KOMVERSION.{komplugin.SupportedKOMVersion}"))
+                                using (File.Create($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}{Path.DirectorySeparatorChar}\\KOMVERSION.{komplugin.SupportedKOMVersion}"))
                                 {
                                 }
 
@@ -252,7 +251,7 @@ namespace Elskom.Generic.Libs
                             }
                             catch (NotImplementedException)
                             {
-                                using (File.Create($"{Application.StartupPath}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}"))
+                                using (File.Create($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}"))
                                 {
                                 }
 
@@ -297,7 +296,7 @@ namespace Elskom.Generic.Libs
                 }
 
                 var xmldatabuffer = Encoding.ASCII.GetBytes(xmldata);
-                if (!File.Exists(outpath + Path.DirectorySeparatorChar + "crc.xml"))
+                if (!File.Exists($"{outpath}{Path.DirectorySeparatorChar}crc.xml"))
                 {
                     using (var fs = File.Create(outpath + Path.DirectorySeparatorChar + "crc.xml"))
                     {
@@ -309,7 +308,7 @@ namespace Elskom.Generic.Libs
                 if (entry.Algorithm == 0)
                 {
                     var failure = false;
-                    using (var entryfile = File.Create(outpath + "\\" + entry.Name))
+                    using (var entryfile = File.Create($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}"))
                     {
                         try
                         {
@@ -328,15 +327,15 @@ namespace Elskom.Generic.Libs
 
                     if (failure)
                     {
-                        File.Move(outpath + "\\" + entry.Name, outpath + "\\" + entry.Name + "." + entry.UncompressedSize + "." + entry.Algorithm);
+                        File.Move($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}", $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}.{entry.UncompressedSize}.{entry.Algorithm}");
                     }
                 }
                 else
                 {
-                    var path = outpath + "\\" + entry.Name + "." + entry.UncompressedSize + "." + entry.Algorithm;
+                    var path = $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}.{entry.UncompressedSize}.{entry.Algorithm}";
                     if (entrydata.Length == entry.UncompressedSize)
                     {
-                        path = outpath + "\\" + entry.Name;
+                        path = $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}";
                     }
 
                     using (var entryfile = File.Create(path))
@@ -362,13 +361,21 @@ namespace Elskom.Generic.Libs
                             }
 
                             // Decrypt the data from a encryption plugin.
-                            Encryptionplugins[0].DecryptEntry(zdec_entrydata, out dec_entrydata, LoadResources.GetFileBaseName(kOMFileName), entry.Algorithm);
+                            if (Encryptionplugins != null && Encryptionplugins.Count > 0)
+                            {
+                                // only use the first encryption/decryption plugin.
+                                Encryptionplugins[0].DecryptEntry(zdec_entrydata, out dec_entrydata, GetFileBaseName(kOMFileName), entry.Algorithm);
+                            }
                         }
                         else
                         {
                             // algorithm 2 code.
                             // Decrypt the data from a encryption plugin.
-                            Encryptionplugins[0].DecryptEntry(entrydata, out byte[] decr_entrydata, LoadResources.GetFileBaseName(kOMFileName), entry.Algorithm);
+                            if (Encryptionplugins != null && Encryptionplugins.Count > 0)
+                            {
+                                // only use the first encryption/decryption plugin.
+                                Encryptionplugins[0].DecryptEntry(entrydata, out var decr_entrydata, GetFileBaseName(kOMFileName), entry.Algorithm);
+                            }
                             try
                             {
                                 MemoryZlib.Decompress(decr_entrydata, out dec_entrydata);
@@ -387,7 +394,7 @@ namespace Elskom.Generic.Libs
                         entryfile.Dispose();
                         if (failure)
                         {
-                            File.Move(outpath + "\\" + entry.Name, outpath + "\\" + entry.Name + "." + entry.UncompressedSize + "." + entry.Algorithm);
+                            File.Move($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}", $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}.{entry.UncompressedSize}.{entry.Algorithm}");
                         }
                     }
 #else
@@ -415,7 +422,7 @@ namespace Elskom.Generic.Libs
                 }
 
                 var entrydata = reader.ReadBytes(entry.CompressedSize);
-                using (var entryfile = File.Create(outpath + "\\" + entry.Name))
+                using (var entryfile = File.Create($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}"))
                 {
                     byte[] dec_entrydata;
                     try
@@ -432,7 +439,7 @@ namespace Elskom.Generic.Libs
                         try
                         {
                             MemoryZlib.Decompress(entrydata, out dec_entrydata);
-                            using (File.Create(outpath + "\\XoRNeeded.dummy"))
+                            using (File.Create($"{outpath}{Path.DirectorySeparatorChar}XoRNeeded.dummy"))
                             {
                             }
                         }
@@ -568,31 +575,37 @@ namespace Elskom.Generic.Libs
         internal static void InvokeMessageEvent(object sender, MessageEventArgs e)
             => MessageEvent?.Invoke(sender, e);
 
+        private static string GetFileBaseName(string fileName)
+        {
+            var fi = new FileInfo(fileName);
+            return fi.Name;
+        }
+
         private static void MoveOriginalKomFiles(string fileName, string origFileDir, string destFileDir)
         {
-            if (!origFileDir.EndsWith("\\"))
+            if (!origFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
             {
-                origFileDir += "\\";
+                origFileDir += Path.DirectorySeparatorChar;
             }
 
-            if (!destFileDir.EndsWith("\\"))
+            if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
             {
-                destFileDir += "\\";
+                destFileDir += Path.DirectorySeparatorChar;
             }
 
-            if (File.Exists(origFileDir + fileName))
+            if (File.Exists($"{origFileDir}{fileName}"))
             {
                 if (!Directory.Exists(destFileDir))
                 {
                     Directory.CreateDirectory(destFileDir);
                 }
 
-                if (!File.Exists(destFileDir + fileName))
+                if (!File.Exists($"{destFileDir}{fileName}"))
                 {
-                    File.Delete(destFileDir + fileName);
+                    File.Delete($"{destFileDir}{fileName}");
                 }
 
-                File.Move(origFileDir + fileName, destFileDir + fileName);
+                File.Move($"{origFileDir}{fileName}", $"{destFileDir}{fileName}");
             }
         }
 
@@ -603,7 +616,7 @@ namespace Elskom.Generic.Libs
 
             // 27 is the size of the header string denoting the KOM file version number.
             var offset = 0;
-            using (var reader = new BinaryReader(File.OpenRead(Application.StartupPath + "\\koms\\" + komfile), Encoding.ASCII))
+            using (var reader = new BinaryReader(File.OpenRead($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{komfile}"), Encoding.ASCII))
             {
                 reader.Read(headerbuffer, offset, 27);
             }
@@ -634,11 +647,11 @@ namespace Elskom.Generic.Libs
             {
                 if (komplugin.SupportedKOMVersion != 0)
                 {
-                    if (File.Exists(datafolder + "\\KOMVERSION." + komplugin.SupportedKOMVersion))
+                    if (File.Exists($"{datafolder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}"))
                     {
                         try
                         {
-                            File.Delete(datafolder + "\\KOMVERSION." + komplugin.SupportedKOMVersion);
+                            File.Delete($"{datafolder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}");
                             ret = komplugin.SupportedKOMVersion;
                         }
                         catch (IOException)
