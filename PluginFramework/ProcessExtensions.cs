@@ -46,6 +46,11 @@ namespace Elskom.Generic.Libs
         /// <returns>empty string, process stdout data, process stderr data.</returns>
         public static string Shell(this Process proc, string fileName, string arguments, bool redirectStandardOutput, bool redirectStandardError, bool useShellExecute, bool createNoWindow, ProcessWindowStyle windowStyle, string workingDirectory, bool waitForProcessExit)
         {
+            if (proc == null)
+            {
+                throw new System.ArgumentNullException(nameof(proc));
+            }
+
             proc.StartInfo.FileName = fileName;
             proc.StartInfo.Arguments = arguments;
             proc.StartInfo.RedirectStandardOutput = redirectStandardOutput;
@@ -66,13 +71,18 @@ namespace Elskom.Generic.Libs
         /// <returns>empty string, process stdout data, process stderr data.</returns>
         public static string Shell(this Process proc)
         {
+            if (proc == null)
+            {
+                throw new System.ArgumentNullException(nameof(proc));
+            }
+
             if (!Executing)
             {
                 Reset();
             }
 
             var ret = string.Empty;
-            proc.Start();
+            _ = proc.Start();
             if (Executing)
             {
                 Executing = false;

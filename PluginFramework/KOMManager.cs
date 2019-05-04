@@ -7,7 +7,9 @@ namespace Elskom.Generic.Libs
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics.CodeAnalysis;
     using System.IO;
+    using System.Messaging;
     using System.Text;
     using System.Xml.Linq;
 
@@ -160,7 +162,7 @@ namespace Elskom.Generic.Libs
                 if (kom_ver != 0)
                 {
                     // remove ".kom" on end of string.
-                    var kom_data_folder = Path.GetFileNameWithoutExtension($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}kom_file");
+                    var kom_data_folder = Path.GetFileNameWithoutExtension($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_file}");
                     foreach (var komplugin in Komplugins)
                     {
                         try
@@ -193,17 +195,17 @@ namespace Elskom.Generic.Libs
                         catch (NotUnpackableException)
                         {
                             // do not delete kom file.
-                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unpacking this KOM file failed.", "Error!"));
+                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unpacking this KOM file failed.", "Error!", ErrorLevel.Error));
                         }
                         catch (NotImplementedException)
                         {
-                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an unpacker function yet. Although it should.", "Error!"));
+                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an unpacker function yet. Although it should.", "Error!", ErrorLevel.Error));
                         }
                     }
                 }
                 else
                 {
-                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", "Error!"));
+                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", "Error!", ErrorLevel.Error));
                 }
             }
 
@@ -247,7 +249,7 @@ namespace Elskom.Generic.Libs
                                 {
                                 }
 
-                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Packing an folder to an KOM file failed.", "Error!"));
+                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Packing an folder to an KOM file failed.", "Error!", ErrorLevel.Error));
                             }
                             catch (NotImplementedException)
                             {
@@ -255,18 +257,18 @@ namespace Elskom.Generic.Libs
                                 {
                                 }
 
-                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an packer function yet. Although it should.", "Error!"));
+                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an packer function yet. Although it should.", "Error!", ErrorLevel.Error));
                             }
                         }
                     }
                     else
                     {
-                        InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("An error occured while packing the file(s) to an KOM file.", "Error!"));
+                        InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("An error occured while packing the file(s) to an KOM file.", "Error!", ErrorLevel.Error));
                     }
                 }
                 else
                 {
-                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", "Error!"));
+                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", "Error!", ErrorLevel.Error));
                 }
             }
 
@@ -288,6 +290,16 @@ namespace Elskom.Generic.Libs
         public static void WriteOutput(BinaryReader reader, string outpath, EntryVer entry, int version, string xmldata)
 #endif
         {
+            if (reader == null)
+            {
+                throw new ArgumentNullException(nameof(reader));
+            }
+
+            if (entry == null)
+            {
+                throw new ArgumentNullException(nameof(entry));
+            }
+
             if (version > 2)
             {
                 if (!Directory.Exists(outpath))
@@ -575,11 +587,13 @@ namespace Elskom.Generic.Libs
         internal static void InvokeMessageEvent(object sender, MessageEventArgs e)
             => MessageEvent?.Invoke(sender, e);
 
+#if VERSION_0x01050000
         private static string GetFileBaseName(string fileName)
         {
             var fi = new FileInfo(fileName);
             return fi.Name;
         }
+#endif
 
         private static void MoveOriginalKomFiles(string fileName, string origFileDir, string destFileDir)
         {
@@ -597,7 +611,7 @@ namespace Elskom.Generic.Libs
             {
                 if (!Directory.Exists(destFileDir))
                 {
-                    Directory.CreateDirectory(destFileDir);
+                    _ = Directory.CreateDirectory(destFileDir);
                 }
 
                 if (!File.Exists($"{destFileDir}{fileName}"))
@@ -609,6 +623,7 @@ namespace Elskom.Generic.Libs
             }
         }
 
+        [SuppressMessage("Maintainability", "CA1508:Avoid dead conditional code", Justification = "Created in a using block that never checks for null.", Scope = "member")]
         private static int GetHeaderVersion(string komfile)
         {
             var ret = 0;
@@ -618,7 +633,7 @@ namespace Elskom.Generic.Libs
             var offset = 0;
             using (var reader = new BinaryReader(File.OpenRead($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{komfile}"), Encoding.ASCII))
             {
-                reader.Read(headerbuffer, offset, 27);
+                _ = reader.Read(headerbuffer, offset, 27);
             }
 
             var headerstring = Encoding.UTF8.GetString(headerbuffer);
