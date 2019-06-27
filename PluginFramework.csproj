@@ -184,7 +184,7 @@
 
   <ItemGroup Condition="!Exists('../XmlAbstraction/src/XmlAbstraction/src/XmlAbstraction.csproj')">
 		<PackageReference Include="XmlAbstraction">
-			<Version>1.2.2</Version>
+			<Version>1.2.3</Version>
 		</PackageReference>
   </ItemGroup>
 
