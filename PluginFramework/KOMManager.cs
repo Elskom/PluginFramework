@@ -126,8 +126,19 @@ namespace Elskom.Generic.Libs
         /// <param name="fileName">The name of the file to move.</param>
         /// <param name="origFileDir">The original kom file location.</param>
         /// <param name="destFileDir">The target to move the kom file too.</param>
+        /// <exception cref="ArgumentNullException">When <paramref name="origFileDir"/> or <paramref name="destFileDir"/> are <see langword="null"/> or empty.</exception>
         public static void MoveOriginalKomFilesBack(string fileName, string origFileDir, string destFileDir)
         {
+            if (string.IsNullOrEmpty(origFileDir))
+            {
+                throw new ArgumentNullException(nameof(origFileDir));
+            }
+
+            if (string.IsNullOrEmpty(destFileDir))
+            {
+                throw new ArgumentNullException(nameof(destFileDir));
+            }
+
             if (!origFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
             {
                 origFileDir += Path.DirectorySeparatorChar;
@@ -225,7 +236,7 @@ namespace Elskom.Generic.Libs
                 var kom_ver = CheckFolderVersion($"{Directory.GetCurrentDirectory()}{Path.DirectorySeparatorChar}koms{Path.DirectorySeparatorChar}{kom_data_folder}");
                 if (kom_ver != 0)
                 {
-                    var kom_file = "{kom_data_folder}.kom";
+                    var kom_file = $"{kom_data_folder}.kom";
 
                     // pack kom based on the version of kom supplied.
                     if (kom_ver != -1)
