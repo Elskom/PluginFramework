@@ -130,7 +130,7 @@
 
   <ItemGroup Condition="!Exists('../BlowFish/BlowFish.csproj') OR '$(SolutionName)' != 'build_all_packages'">
     <PackageReference Include="BlowFish">
-      <Version>1.0.3-preview-97635824</Version>
+      <Version>1.0.3-preview-98011465</Version>
     </PackageReference>
   </ItemGroup>
 
