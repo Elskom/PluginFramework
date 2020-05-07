@@ -150,7 +150,7 @@
 
   <ItemGroup Condition="!Exists('../XmlAbstraction/src/XmlAbstraction/src/XmlAbstraction.csproj') OR '$(SolutionName)' != 'build_all_packages'">
     <PackageReference Include="XmlAbstraction">
-      <Version>1.2.4-preview-97633980</Version>
+      <Version>1.2.4-preview-98007074</Version>
     </PackageReference>
   </ItemGroup>
 
