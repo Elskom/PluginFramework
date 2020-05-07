@@ -12,7 +12,7 @@ namespace Elskom.Generic.Libs
     using System.Messaging;
     using System.Text;
     using System.Xml.Linq;
-    using PluginFramework.Properties;
+    using Elskom.Generic.Libs.Properties;
 
     /// <summary>
     /// Class that allows managing kom Files.

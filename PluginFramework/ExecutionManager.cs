@@ -10,7 +10,7 @@ namespace Elskom.Generic.Libs
     using System.IO;
     using System.Linq;
     using System.Messaging;
-    using PluginFramework.Properties;
+    using Elskom.Generic.Libs.Properties;
 
     /// <summary>
     /// Class that allows executing Elsword directly or it's launcher.
