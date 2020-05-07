@@ -12,6 +12,7 @@ namespace Elskom.Generic.Libs
     using System.Messaging;
     using System.Text;
     using System.Xml.Linq;
+    using PluginFramework.Properties;
 
     /// <summary>
     /// Class that allows managing kom Files.
@@ -104,12 +105,16 @@ namespace Elskom.Generic.Libs
         /// <param name="destFileDir">The target to copy the kom file too.</param>
         public static void CopyKomFiles(string fileName, string origFileDir, string destFileDir)
         {
+            if (destFileDir is null)
+            {
+                throw new ArgumentNullException(nameof(destFileDir));
+            }
             if (File.Exists($"{origFileDir}{fileName}"))
             {
                 if (Directory.Exists(destFileDir))
                 {
                     MoveOriginalKomFiles(fileName, destFileDir, $"{destFileDir}{Path.DirectorySeparatorChar}backup");
-                    if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
+                    if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
                     {
                         // we must add this before copying the file to the target location.
                         destFileDir += Path.DirectorySeparatorChar;
@@ -139,23 +144,20 @@ namespace Elskom.Generic.Libs
                 throw new ArgumentNullException(nameof(destFileDir));
             }
 
-            if (!origFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
+            if (!origFileDir.EndsWith($"{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             {
                 origFileDir += Path.DirectorySeparatorChar;
             }
 
-            if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
+            if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             {
                 destFileDir += Path.DirectorySeparatorChar;
             }
 
-            if (File.Exists($"{origFileDir}{fileName}"))
+            if (File.Exists($"{origFileDir}{fileName}") && File.Exists($"{destFileDir}{fileName}"))
             {
-                if (File.Exists($"{destFileDir}{fileName}"))
-                {
-                    File.Copy($"{origFileDir}{fileName}", $"{destFileDir}{fileName}", true);
-                    File.Delete($"{origFileDir}{fileName}");
-                }
+                File.Copy($"{origFileDir}{fileName}", $"{destFileDir}{fileName}", true);
+                File.Delete($"{origFileDir}{fileName}");
             }
         }
 
@@ -206,17 +208,17 @@ namespace Elskom.Generic.Libs
                         catch (NotUnpackableException)
                         {
                             // do not delete kom file.
-                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unpacking this KOM file failed.", "Error!", ErrorLevel.Error));
+                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs(Resources.KOMManager_Unpacking_KOM_file_failed, Resources.Error, ErrorLevel.Error));
                         }
                         catch (NotImplementedException)
                         {
-                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an unpacker function yet. Although it should.", "Error!", ErrorLevel.Error));
+                            InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an unpacker function yet. Although it should.", Resources.Error, ErrorLevel.Error));
                         }
                     }
                 }
                 else
                 {
-                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", "Error!", ErrorLevel.Error));
+                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", Resources.Error, ErrorLevel.Error));
                 }
             }
 
@@ -260,7 +262,7 @@ namespace Elskom.Generic.Libs
                                 {
                                 }
 
-                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Packing an folder to an KOM file failed.", "Error!", ErrorLevel.Error));
+                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Packing an folder to an KOM file failed.", Resources.Error, ErrorLevel.Error));
                             }
                             catch (NotImplementedException)
                             {
@@ -268,18 +270,18 @@ namespace Elskom.Generic.Libs
                                 {
                                 }
 
-                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an packer function yet. Although it should.", "Error!", ErrorLevel.Error));
+                                InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs($"The KOM V{komplugin.SupportedKOMVersion} plugin does not implement an packer function yet. Although it should.", Resources.Error, ErrorLevel.Error));
                             }
                         }
                     }
                     else
                     {
-                        InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("An error occured while packing the file(s) to an KOM file.", "Error!", ErrorLevel.Error));
+                        InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("An error occured while packing the file(s) to an KOM file.", Resources.Error, ErrorLevel.Error));
                     }
                 }
                 else
                 {
-                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", "Error!", ErrorLevel.Error));
+                    InvokeMessageEvent(typeof(KOMManager), new MessageEventArgs("Unknown KOM version Detected. Please send this KOM to the Els_kom Developers file for inspection.", Resources.Error, ErrorLevel.Error));
                 }
             }
 
@@ -515,7 +517,7 @@ namespace Elskom.Generic.Libs
             var di1 = new DirectoryInfo(checkpath);
             foreach (var fi1 in di1.GetFiles())
             {
-                if (!fi1.Name.Equals(crcfile.Name))
+                if (!fi1.Name.Equals(crcfile.Name, StringComparison.Ordinal))
                 {
                     var found = false;
 
@@ -528,7 +530,7 @@ namespace Elskom.Generic.Libs
                         {
                             var nameAttribute = fileElement.Attribute("Name");
                             var name = nameAttribute?.Value ?? "no value";
-                            if (name.Equals(fi1.Name))
+                            if (name.Equals(fi1.Name, StringComparison.Ordinal))
                             {
                                 found = true;
                             }
@@ -608,12 +610,12 @@ namespace Elskom.Generic.Libs
 
         private static void MoveOriginalKomFiles(string fileName, string origFileDir, string destFileDir)
         {
-            if (!origFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
+            if (!origFileDir.EndsWith($"{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             {
                 origFileDir += Path.DirectorySeparatorChar;
             }
 
-            if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}"))
+            if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
             {
                 destFileDir += Path.DirectorySeparatorChar;
             }
@@ -651,7 +653,7 @@ namespace Elskom.Generic.Libs
             foreach (var komplugin in Komplugins)
             {
                 // get version of kom file for unpacking it.
-                if (komplugin.KOMHeaderString == string.Empty)
+                if (string.IsNullOrEmpty(komplugin.KOMHeaderString))
                 {
                     // skip this plugin it does not implement an packer or unpacker.
                     continue;

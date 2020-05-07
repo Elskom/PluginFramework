@@ -10,6 +10,7 @@ namespace Elskom.Generic.Libs
     using System.IO;
     using System.Linq;
     using System.Messaging;
+    using PluginFramework.Properties;
 
     /// <summary>
     /// Class that allows executing Elsword directly or it's launcher.
@@ -20,13 +21,13 @@ namespace Elskom.Generic.Libs
         /// Gets a value indicating whether the launcher to Elsword is running.
         /// </summary>
         /// <returns>A value indicating if Elsword is running.</returns>
-        public static bool RunningElsword { get; private set; } = false;
+        public static bool RunningElsword { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether Elsword is running Directly.
         /// </summary>
         /// <returns>A value indicating if Elsword is running directly.</returns>
-        public static bool RunningElswordDirectly { get; private set; } = false;
+        public static bool RunningElswordDirectly { get; private set; }
 
         private static string ElsDir { get; set; }
 
@@ -66,19 +67,19 @@ namespace Elskom.Generic.Libs
                     }
                     else
                     {
-                        KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs($"Can't find '{ElsDir}\\data\\x2.exe'. Make sure the File Exists and try to Test your mods Again!", "Error!", ErrorLevel.Error));
+                        KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs($"Can't find '{ElsDir}\\data\\x2.exe'. Make sure the File Exists and try to Test your mods Again!", Resources.Error, ErrorLevel.Error));
                         ProcessExtensions.Executing = false;
                     }
                 }
                 else
                 {
-                    KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to Test your mods Again!", "Error!", ErrorLevel.Error));
+                    KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to Test your mods Again!", Resources.Error, ErrorLevel.Error));
                     ProcessExtensions.Executing = false;
                 }
             }
             else
             {
-                KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to Test your mods Again!", "Error!", ErrorLevel.Error));
+                KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to Test your mods Again!", Resources.Error, ErrorLevel.Error));
                 ProcessExtensions.Executing = false;
             }
         }
@@ -123,20 +124,20 @@ namespace Elskom.Generic.Libs
                         }
                         else
                         {
-                            KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs($"Can't find '{ElsDir}{Path.DirectorySeparatorChar}elsword.exe'. Make sure the File Exists and try to update Elsword Again!", "Error!", ErrorLevel.Error));
+                            KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs($"Can't find '{ElsDir}{Path.DirectorySeparatorChar}elsword.exe'. Make sure the File Exists and try to update Elsword Again!", Resources.Error, ErrorLevel.Error));
                             ProcessExtensions.Executing = false;
                         }
                     }
                 }
                 else
                 {
-                    KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to update Elsword Again!", "Error!", ErrorLevel.Error));
+                    KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to update Elsword Again!", Resources.Error, ErrorLevel.Error));
                     ProcessExtensions.Executing = false;
                 }
             }
             else
             {
-                KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to update Elsword Again!", "Error!", ErrorLevel.Error));
+                KOMManager.InvokeMessageEvent(typeof(ExecutionManager), new MessageEventArgs("The Elsword Directory Setting is not set. Make sure to Set your Elsword Directory Setting and try to update Elsword Again!", Resources.Error, ErrorLevel.Error));
                 ProcessExtensions.Executing = false;
             }
         }
