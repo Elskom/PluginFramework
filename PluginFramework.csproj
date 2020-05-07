@@ -120,7 +120,7 @@
 
   <ItemGroup Condition="!Exists('../zlib.managed/zlib.managed.csproj') OR '$(SolutionName)' != 'build_all_packages'">
     <PackageReference Include="zlib.managed">
-      <Version>1.1.5-preview-97628803</Version>
+      <Version>1.1.5-preview-98010892</Version>
     </PackageReference>
   </ItemGroup>
 
