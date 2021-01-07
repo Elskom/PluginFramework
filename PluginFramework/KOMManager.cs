@@ -7,12 +7,12 @@ namespace Elskom.Generic.Libs
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics.CodeAnalysis;
     using System.IO;
     using System.Messaging;
     using System.Text;
     using System.Xml.Linq;
     using Elskom.Generic.Libs.Properties;
+    using UnluacNET;
 
     /// <summary>
     /// Class that allows managing kom Files.
@@ -109,18 +109,19 @@ namespace Elskom.Generic.Libs
             {
                 throw new ArgumentNullException(nameof(destFileDir));
             }
+
             if (File.Exists($"{origFileDir}{fileName}"))
             {
                 if (Directory.Exists(destFileDir))
                 {
                     MoveOriginalKomFiles(fileName, destFileDir, $"{destFileDir}{Path.DirectorySeparatorChar}backup");
+                    File.Copy(origFileDir + fileName, destFileDir + fileName);
                     if (!destFileDir.EndsWith($"{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
                     {
                         // we must add this before copying the file to the target location.
                         destFileDir += Path.DirectorySeparatorChar;
                     }
 
-                    File.Copy(origFileDir + fileName, destFileDir + fileName);
                 }
             }
         }
@@ -296,12 +297,8 @@ namespace Elskom.Generic.Libs
         /// <param name="entry">The kom file entry instance.</param>
         /// <param name="version">The kom file version.</param>
         /// <param name="xmldata">The crc.xml data to write.</param>
-#if VERSION_0x01050000
         /// <param name="kOMFileName">The name of the kom file the entry is from.</param>
         public static void WriteOutput(BinaryReader reader, string outpath, EntryVer entry, int version, string xmldata, string kOMFileName)
-#else
-        public static void WriteOutput(BinaryReader reader, string outpath, EntryVer entry, int version, string xmldata)
-#endif
         {
             if (reader == null)
             {
@@ -329,16 +326,16 @@ namespace Elskom.Generic.Libs
                     }
                 }
 
-                var entrydata = reader.ReadBytes(entry.CompressedSize);
+                var entrydata = new byte[entry.CompressedSize];
+                reader.Read(entrydata, 0, entrydata.Length);
                 if (entry.Algorithm == 0)
                 {
-                    var failure = false;
-                    using (var entryfile = File.Create($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}"))
+                    using (var entryData = new MemoryStream())
                     {
                         try
                         {
-                            MemoryZlib.Decompress(entrydata, out var dec_entrydata);
-                            entryfile.Write(dec_entrydata, 0, entry.UncompressedSize);
+                            int i = 0;
+                            MemoryZlib.Decompress(entrydata, entryData);
                         }
                         catch (ArgumentException ex)
                         {
@@ -348,62 +345,71 @@ namespace Elskom.Generic.Libs
                         {
                             throw new NotUnpackableException("decompression failed...", ex);
                         }
-                    }
 
-                    if (failure)
-                    {
-                        File.Move($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}", $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}.{entry.UncompressedSize}.{entry.Algorithm}");
+                        if (entry.Name.EndsWith(".lua", StringComparison.OrdinalIgnoreCase) || entry.Name.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // the particles and the lua files seem to share the same encryption in alg 0.
+                            // Decrypt the data from a encryption plugin.
+                            if (Encryptionplugins != null && Encryptionplugins.Count > 0)
+                            {
+                                // only use the first encryption/decryption plugin.
+                                Encryptionplugins[0].DecryptEntry(entryData, GetFileBaseName(kOMFileName), entry.Algorithm);
+                            }
+                        }
+
+                        if (entry.Name.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
+                        {
+                            try
+                            {
+                                LFunction lMain;
+                                using (var ms = new MemoryStream(entryData.ToArray()))
+                                {
+                                    var header = new BHeader(ms);
+                                    lMain = header.Function.Parse(ms, header);
+                                }
+
+                                var d = new Decompiler(lMain);
+                                d.Decompile();
+                                entryData.Clear();
+                                using (var writer = new StreamWriter(entryData, Encoding.UTF8))
+                                {
+                                    d.Print(new Output(writer));
+                                    writer.Flush();
+                                }
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                // save decrypted data.
+                                File.WriteAllBytes($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}", entryData.GetBuffer());
+                            }
+                        }
+                        else // is particle or any other file.
+                        {
+                            File.WriteAllBytes($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}", entryData.GetBuffer());
+                        }
                     }
                 }
                 else
                 {
-                    var path = $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}.{entry.UncompressedSize}.{entry.Algorithm}";
-                    if (entrydata.Length == entry.UncompressedSize)
+                    if (entry.Algorithm == 2 || entry.Algorithm == 3)
                     {
-                        path = $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}";
-                    }
-
-                    using (var entryfile = File.Create(path))
-                    {
-#if VERSION_0x01050000
-                        byte[] dec_entrydata = null;
-                        var failure = false;
-                        if (entry.Algorithm == 3)
+                        // algorithm 2 and 3 code.
+                        // throw new NotUnpackableException("Algorithm 2 and 3 not supported yet.");
+                        var path = $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}";
+                        using (var entryfile = File.Create(path))
+                        using (var entryData = new MemoryStream())
+                        using (var tmpStream = new MemoryStream(entrydata, 0, entrydata.Length, true, true))
                         {
-                            // algorithm 3 code.
-                            byte[] zdec_entrydata = null;
-                            try
-                            {
-                                MemoryZlib.Decompress(entrydata, out zdec_entrydata);
-                            }
-                            catch (ArgumentException ex)
-                            {
-                                throw new NotUnpackableException("Something failed...", ex);
-                            }
-                            catch (NotUnpackableException ex)
-                            {
-                                throw new NotUnpackableException("decompression failed...", ex);
-                            }
-
                             // Decrypt the data from a encryption plugin.
                             if (Encryptionplugins != null && Encryptionplugins.Count > 0)
                             {
                                 // only use the first encryption/decryption plugin.
-                                Encryptionplugins[0].DecryptEntry(zdec_entrydata, out dec_entrydata, GetFileBaseName(kOMFileName), entry.Algorithm);
+                                Encryptionplugins[0].DecryptEntry(tmpStream, GetFileBaseName(kOMFileName), entry.Algorithm);
                             }
-                        }
-                        else
-                        {
-                            // algorithm 2 code.
-                            // Decrypt the data from a encryption plugin.
-                            if (Encryptionplugins != null && Encryptionplugins.Count > 0)
-                            {
-                                // only use the first encryption/decryption plugin.
-                                Encryptionplugins[0].DecryptEntry(entrydata, out var decr_entrydata, GetFileBaseName(kOMFileName), entry.Algorithm);
-                            }
+                        
                             try
                             {
-                                MemoryZlib.Decompress(decr_entrydata, out dec_entrydata);
+                                MemoryZlib.Decompress(tmpStream.GetBuffer(), entryData);
                             }
                             catch (ArgumentException ex)
                             {
@@ -414,28 +420,38 @@ namespace Elskom.Generic.Libs
                                 throw new NotUnpackableException("decompression failed...", ex);
                             }
                         }
-
-                        entryfile.Write(dec_entrydata, 0, entry.UncompressedSize);
-                        entryfile.Dispose();
-                        if (failure)
+                        
+                        if (entry.Name.EndsWith(".lua", StringComparison.OrdinalIgnoreCase))
                         {
-                            File.Move($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}", $"{outpath}{Path.DirectorySeparatorChar}{entry.Name}.{entry.UncompressedSize}.{entry.Algorithm}");
-                        }
-                    }
-#else
-                        if (entry.Algorithm == 3)
-                        {
-                            // algorithm 3 code.
+                            try
+                            {
+                                LFunction lMain;
+                                using (var ms = new MemoryStream(entryData.ToArray()))
+                                {
+                                    var header = new BHeader(ms);
+                                    lMain = header.Function.Parse(ms, header);
+                                }
+                        
+                                var d = new Decompiler(lMain);
+                                d.Decompile();
+                                entryfile.Close();
+                                entryData.Clear();
+                                using (var writer = new StreamWriter(path, false, new UTF8Encoding(false)))
+                                {
+                                    d.Print(new Output(writer));
+                                    writer.Flush();
+                                }
+                            }
+                            catch (InvalidOperationException)
+                            {
+                                entryData.CopyTo(entryfile);
+                            }
                         }
                         else
                         {
-                            // algorithm 2 code.
+                            entryData.CopyTo(entryfile);
                         }
-
-                        // for now until I can decompress this crap.
-                        entryfile.Write(entrydata, 0, entry.CompressedSize);
                     }
-#endif
                 }
             }
             else
@@ -446,13 +462,13 @@ namespace Elskom.Generic.Libs
                     Directory.CreateDirectory(outpath);
                 }
 
-                var entrydata = reader.ReadBytes(entry.CompressedSize);
+                var entrydata = reader.ReadBytes((int)entry.CompressedSize);
                 using (var entryfile = File.Create($"{outpath}{Path.DirectorySeparatorChar}{entry.Name}"))
+                using (var entryData = new MemoryStream())
                 {
-                    byte[] dec_entrydata;
                     try
                     {
-                        MemoryZlib.Decompress(entrydata, out dec_entrydata);
+                        MemoryZlib.Decompress(entrydata, entryData);
                     }
                     catch (NotUnpackableException)
                     {
@@ -463,9 +479,11 @@ namespace Elskom.Generic.Libs
                         BlowFish.XorBlock(ref entrydata, xorkey);
                         try
                         {
-                            MemoryZlib.Decompress(entrydata, out dec_entrydata);
+                            entryData.Clear();
+                            MemoryZlib.Decompress(entrydata, entryData);
                             using (File.Create($"{outpath}{Path.DirectorySeparatorChar}XoRNeeded.dummy"))
                             {
+                                // dummy comment here.
                             }
                         }
                         catch (NotUnpackableException ex)
@@ -474,7 +492,7 @@ namespace Elskom.Generic.Libs
                         }
                     }
 
-                    entryfile.Write(dec_entrydata, 0, entry.UncompressedSize);
+                    entryData.CopyTo(entryfile);
                 }
             }
         }
@@ -572,6 +590,12 @@ namespace Elskom.Generic.Libs
             }
         }
 
+        public static string GetFileBaseName(string fileName)
+        {
+            var fi = new FileInfo(fileName);
+            return fi.Name;
+        }
+
         /// <summary>
         /// Gets the crc.xml file version.
         /// </summary>
@@ -599,14 +623,6 @@ namespace Elskom.Generic.Libs
 
         internal static void InvokeMessageEvent(object sender, MessageEventArgs e)
             => MessageEvent?.Invoke(sender, e);
-
-#if VERSION_0x01050000
-        private static string GetFileBaseName(string fileName)
-        {
-            var fi = new FileInfo(fileName);
-            return fi.Name;
-        }
-#endif
 
         private static void MoveOriginalKomFiles(string fileName, string origFileDir, string destFileDir)
         {
@@ -636,7 +652,6 @@ namespace Elskom.Generic.Libs
             }
         }
 
-        [SuppressMessage("Maintainability", "CA1508:Avoid dead conditional code", Justification = "Created in a using block that never checks for null.", Scope = "member")]
         private static int GetHeaderVersion(string komfile)
         {
             var ret = 0;
@@ -673,19 +688,16 @@ namespace Elskom.Generic.Libs
             var ret = 0;
             foreach (var komplugin in Komplugins)
             {
-                if (komplugin.SupportedKOMVersion != 0)
+                if (komplugin.SupportedKOMVersion != 0 && File.Exists($"{datafolder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}"))
                 {
-                    if (File.Exists($"{datafolder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}"))
+                    try
                     {
-                        try
-                        {
-                            File.Delete($"{datafolder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}");
-                            ret = komplugin.SupportedKOMVersion;
-                        }
-                        catch (IOException)
-                        {
-                            ret = -1;
-                        }
+                        File.Delete($"{datafolder}{Path.DirectorySeparatorChar}KOMVERSION.{komplugin.SupportedKOMVersion}");
+                        ret = komplugin.SupportedKOMVersion;
+                    }
+                    catch (IOException)
+                    {
+                        ret = -1;
                     }
                 }
             }

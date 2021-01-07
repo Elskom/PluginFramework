@@ -5,6 +5,8 @@
 
 namespace Elskom.Generic.Libs
 {
+    using System.IO;
+
     /// <summary>
     /// Interface for Els_kom kom entry Encryption and Decryption plugins (Version 1.5.0.0 or newer).
     ///
@@ -30,11 +32,10 @@ namespace Elskom.Generic.Libs
         /// When the KOM file algorithm is not suppoted by the curently installed
         /// encryption plugin.
         /// </exception>
-        /// <param name="input">The input data to Decrypt.</param>
-        /// <param name="output">The decrypted data.</param>
+        /// <param name="input">The input data to Decrypt output replaces everything in the Stream.</param>
         /// <param name="kOMFileName">The file name the entry is from.</param>
         /// <param name="algorithm">The algorithm the entry is.</param>
-        void DecryptEntry(byte[] input, out byte[] output, string kOMFileName, int algorithm);
+        void DecryptEntry(Stream input, string kOMFileName, uint algorithm);
 
         /// <summary>
         /// Encrypts an KOM file entry. If KOM file algorithm is not supported
@@ -44,10 +45,9 @@ namespace Elskom.Generic.Libs
         /// When the KOM file algorithm is not suppoted by the curently installed
         /// encryption plugin.
         /// </exception>
-        /// <param name="input">The input data to Encrypt.</param>
-        /// <param name="output">The Encrypted data.</param>
+        /// <param name="input">The input data to Encrypt output replaces everything in the Stream.</param>
         /// <param name="kOMFileName">The file name the entry is from.</param>
         /// <param name="algorithm">The algorithm the entry is.</param>
-        void EncryptEntry(byte[] input, out byte[] output, string kOMFileName, int algorithm);
+        void EncryptEntry(Stream input, string kOMFileName, uint algorithm);
     }
 }

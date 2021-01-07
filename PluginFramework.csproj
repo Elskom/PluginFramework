@@ -1,7 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1;net40;net45;net451;net452;net46;net461;net462;net47;net471;net472;net48</TargetFrameworks>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
+    <!-- <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1;net5.0;net40;net45;net451;net452;net46;net461;net462;net47;net471;net472;net48</TargetFrameworks> -->
+    <TargetFrameworks>net40;net45;net451;net452;net46;net461;net462;net47;net471;net472;net48</TargetFrameworks>
     <AssemblyName>Elskom.PluginFramework</AssemblyName>
     <LangVersion>latest</LangVersion>
     <Company>Els_kom org.</Company>
@@ -51,6 +53,11 @@
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Remove=".git" />
     <None Remove=".gitignore" />
@@ -60,9 +67,22 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../UnluacNET/UnluacNET.csproj" />
     <PackageReference Include="GitBuildInfo" Version="0.25.0-preview-99680043">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SecurityCodeScan" Version="3.5.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="8.9.0.19135">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.164">
       <PrivateAssets>all</PrivateAssets>
@@ -105,51 +125,51 @@
     <AdditionalFiles Include="stylecop.json" />
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('..\GitInformation\src\GitInformation\AraHaan.GitInformation.csproj') AND '$(SolutionName)' == 'build_all_packages'">
+  <ItemGroup Condition="Exists('..\GitInformation\src\GitInformation\AraHaan.GitInformation.csproj')">
     <ProjectReference Include="..\GitInformation\src\GitInformation\AraHaan.GitInformation.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="!Exists('..\GitInformation\src\GitInformation\AraHaan.GitInformation.csproj') OR '$(SolutionName)' != 'build_all_packages'">
+  <ItemGroup Condition="!Exists('..\GitInformation\src\GitInformation\AraHaan.GitInformation.csproj')">
     <PackageReference Include="AraHaan.GitInformation">
       <Version>1.0.2-preview-99679663</Version>
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('../zlib.managed/zlib.managed.csproj') AND '$(SolutionName)' == 'build_all_packages'">
+  <ItemGroup Condition="Exists('../zlib.managed/zlib.managed.csproj')">
     <ProjectReference Include="../zlib.managed/zlib.managed.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="!Exists('../zlib.managed/zlib.managed.csproj') OR '$(SolutionName)' != 'build_all_packages'">
+  <ItemGroup Condition="!Exists('../zlib.managed/zlib.managed.csproj')">
     <PackageReference Include="zlib.managed">
       <Version>1.1.5-preview-99682104</Version>
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('../BlowFish/BlowFish.csproj') AND '$(SolutionName)' == 'build_all_packages'">
+  <ItemGroup Condition="Exists('../BlowFish/BlowFish.csproj')">
     <ProjectReference Include="../BlowFish/BlowFish.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="!Exists('../BlowFish/BlowFish.csproj') OR '$(SolutionName)' != 'build_all_packages'">
+  <ItemGroup Condition="!Exists('../BlowFish/BlowFish.csproj')">
     <PackageReference Include="BlowFish">
       <Version>1.0.3-preview-99679781</Version>
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('../SettingsFile/SettingsFile.csproj') AND '$(SolutionName)' == 'build_all_packages'">
+  <ItemGroup Condition="Exists('../SettingsFile/SettingsFile.csproj')">
     <ProjectReference Include="../SettingsFile/SettingsFile.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="!Exists('../SettingsFile/SettingsFile.csproj') OR '$(SolutionName)' != 'build_all_packages'">
+  <ItemGroup Condition="!Exists('../SettingsFile/SettingsFile.csproj')">
     <PackageReference Include="SettingsFile">
       <Version>1.0.4-preview-99680596</Version>
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="Exists('../XmlAbstraction/src/XmlAbstraction/src/XmlAbstraction.csproj') AND '$(SolutionName)' == 'build_all_packages'">
+  <ItemGroup Condition="Exists('../XmlAbstraction/src/XmlAbstraction/src/XmlAbstraction.csproj')">
     <ProjectReference Include="../XmlAbstraction/src/XmlAbstraction/src/XmlAbstraction.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="!Exists('../XmlAbstraction/src/XmlAbstraction/src/XmlAbstraction.csproj') OR '$(SolutionName)' != 'build_all_packages'">
+  <ItemGroup Condition="!Exists('../XmlAbstraction/src/XmlAbstraction/src/XmlAbstraction.csproj')">
     <PackageReference Include="XmlAbstraction">
       <Version>1.2.4-preview-99682322</Version>
     </PackageReference>
